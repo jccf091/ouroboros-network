@@ -141,6 +141,19 @@ codecHandshake versionNumberCodec = mkCodecCborLazyBS encodeMsg decodeMsg
                    | (vNumber, vParams) <- vs'
                    ]
 
+      -- Although `MsgProposeVersions'` shall not be sent, for testing purposes
+      -- it is useful to have an encoder for it.
+      encodeMsg (ServerAgency TokConfirm) (MsgProposeVersions' vs) =
+        let vs' = Map.toAscList vs
+        in
+           CBOR.encodeListLen 2
+        <> CBOR.encodeWord 0
+        <> CBOR.encodeMapLen (fromIntegral $ length vs')
+        <> mconcat [    CBOR.encodeTerm (encodeTerm versionNumberCodec vNumber)
+                     <> CBOR.encodeTerm vParams
+                   | (vNumber, vParams) <- vs'
+                   ]
+
       encodeMsg (ServerAgency TokConfirm) (MsgAcceptVersion vNumber vParams) =
            CBOR.encodeListLen 3
         <> CBOR.encodeWord 1
@@ -151,6 +164,7 @@ codecHandshake versionNumberCodec = mkCodecCborLazyBS encodeMsg decodeMsg
            CBOR.encodeListLen 2
         <> CBOR.encodeWord 2
         <> encodeRefuseReason versionNumberCodec vReason
+
 
       -- decode a map checking the assumption that
       --  * keys are different
@@ -186,6 +200,10 @@ codecHandshake versionNumberCodec = mkCodecCborLazyBS encodeMsg decodeMsg
             l  <- CBOR.decodeMapLen
             vMap <- decodeMap l Nothing []
             pure $ SomeMessage $ MsgProposeVersions vMap
+          (ServerAgency TokConfirm, 0, 2) -> do
+            l  <- CBOR.decodeMapLen
+            vMap <- decodeMap l Nothing []
+            pure $ SomeMessage $ MsgProposeVersions' vMap
           (ServerAgency TokConfirm, 1, 3) -> do
             v <- decodeTerm versionNumberCodec <$> CBOR.decodeTerm
             case v of
