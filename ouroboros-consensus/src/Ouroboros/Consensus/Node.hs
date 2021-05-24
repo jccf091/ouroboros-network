@@ -25,6 +25,12 @@ module Ouroboros.Consensus.Node (
   , stdWithCheckedDB
     -- * Exposed by 'run' et al
   , ChainDB.RelativeMountPoint (..)
+  , DiffusionArguments (..)
+  , LowLevelRunNodeArgs (..)
+  , RunNodeArgs (..)
+  , RunNode
+  , Tracers
+  , Tracers' (..)
   , ChainDB.TraceEvent (..)
   , ChainDbArgs (..)
   , ConnectionId (..)
@@ -38,10 +44,6 @@ module Ouroboros.Consensus.Node (
   , NodeKernel (..)
   , NodeKernelArgs (..)
   , ProtocolInfo (..)
-  , RunNode
-  , RunNodeArgs (..)
-  , Tracers
-  , Tracers' (..)
     -- * Internal helpers
   , mkChainDbArgs
   , mkNodeKernelArgs
@@ -65,14 +67,7 @@ import           Control.Monad.Class.MonadTime (MonadTime)
 import           Control.Monad.Class.MonadTimer (MonadTimer)
 
 import           Ouroboros.Network.BlockFetch (BlockFetchConfiguration (..))
-import           Ouroboros.Network.Diffusion
 import           Ouroboros.Network.Magic
-import           Ouroboros.Network.NodeToClient (LocalAddress,
-                     NodeToClientVersionData (..))
-import           Ouroboros.Network.NodeToNode (DiffusionMode,
-                     MiniProtocolParameters (..), NodeToNodeVersionData (..),
-                     RemoteAddress, combineVersions,
-                     defaultMiniProtocolParameters)
 import           Ouroboros.Network.PeerSelection.PeerMetric (PeerMetrics (..),
                      newPeerMetric, reportMetric)
 import           Ouroboros.Network.Protocol.Limits (shortWait)
@@ -85,6 +80,29 @@ import           Ouroboros.Consensus.Fragment.InFuture (CheckInFuture,
                      ClockSkew)
 import qualified Ouroboros.Consensus.Fragment.InFuture as InFuture
 import           Ouroboros.Consensus.Ledger.Extended (ExtLedgerState (..))
+import           Ouroboros.Network.NodeToClient
+                    ( LocalAddress
+                    , NodeToClientVersionData(..)
+                    , ConnectionId
+                    , combineVersions
+                    , simpleSingletonVersions
+                    )
+import           Ouroboros.Network.NodeToNode
+                    (RemoteAddress
+                    , MiniProtocolParameters
+                    , blockFetchPipeliningMax
+                    , DiffusionMode
+                    , NodeToNodeVersionData(..)
+                    , defaultMiniProtocolParameters
+                    )
+import           Ouroboros.Network.Diffusion
+                    ( DiffusionApplications(..)
+                    , DiffusionTracers
+                    , DiffusionArguments
+                    , LedgerPeersConsensusInterface(..)
+                    , runDataDiffusion
+                    , daDiffusionMode
+                    )
 import qualified Ouroboros.Consensus.Network.NodeToClient as NTC
 import qualified Ouroboros.Consensus.Network.NodeToNode as NTN
 import           Ouroboros.Consensus.Node.DbLock
