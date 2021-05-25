@@ -14,6 +14,9 @@ module Ouroboros.Network.Diffusion
   , runDataDiffusion
   , LedgerPeersConsensusInterface (..)
   , daDiffusionMode
+  , mkDiffusionApplicationsP2P
+  , DiffusionInitializationTracer(..)
+  , DiffusionFailure
   )
   where
 
@@ -62,12 +65,22 @@ import           Ouroboros.Network.PeerSelection.LedgerPeers
                  )
 import           Ouroboros.Network.PeerSelection.PeerMetric (PeerMetrics)
 
+import           Ouroboros.Network.Diffusion.Common
+                 ( DiffusionInitializationTracer
+                 , DiffusionFailure
+                 )
 import qualified Ouroboros.Network.Diffusion.P2P as P2P
 import qualified Ouroboros.Network.Diffusion.NonP2P as NonP2P
 
 -- | DiffusionTracers for either P2P or Non-P2P node
 --
 newtype DiffusionTracers = DiffusionTracers (Either NonP2P.DiffusionTracers P2P.DiffusionTracers)
+
+nullTracersP2P :: DiffusionTracers
+nullTracersP2P = DiffusionTracers (Right P2P.nullTracers)
+
+nullTracersNonP2P :: DiffusionTracers
+nullTracersNonP2P = DiffusionTracers (Left NonP2P.nullTracers)
 
 -- | DiffusionArguments for either P2P or Non-P2P node
 --
