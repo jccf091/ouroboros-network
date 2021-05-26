@@ -14,7 +14,6 @@ module Ouroboros.Network.Diffusion
   , runDataDiffusion
   , LedgerPeersConsensusInterface (..)
   , daDiffusionMode
-  , mkDiffusionApplicationsP2P
   , DiffusionInitializationTracer(..)
   , DiffusionFailure
   )
@@ -137,6 +136,34 @@ mkDiffusionArgumentsP2P
     . P2P.DiffusionArguments
         a1 a2 a3 a4 a5 a6 a7 a8 a9
         a10
+
+mkDiffusionApplicationsNonP2P
+  :: Versions NodeToNodeVersion
+             ntnVersionData
+             (OuroborosApplication
+                'ResponderMode
+                ntnAddr
+                ByteString
+                m
+                Void
+                ())
+  -> Versions
+       NodeToNodeVersion
+       ntnVersionData
+       (OuroborosApplication 'InitiatorMode ntnAddr ByteString m () Void)
+  -> Versions
+       NodeToClientVersion
+       ntcVersionData
+       (OuroborosApplication 'ResponderMode ntcAddr ByteString m Void ())
+  -> NTC.ErrorPolicies
+  -> LedgerPeersConsensusInterface m
+  -> DiffusionApplications
+       ntnAddr ntcAddr ntnVersionData ntcVersionData m
+mkDiffusionApplicationsNonP2P a1 a2 a3 a4 =
+    DiffusionApplications
+    . Left
+    . NonP2P.DiffusionApplications
+      a1 a2 a3 a4
 
 -- | Construct a value of P2P DiffusionApplications data type.
 -- ouroboros-consensus needs access to this constructor so we export this
